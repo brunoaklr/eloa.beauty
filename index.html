@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamento | Eloa Nails</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: #fff4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 95%;
+      max-width: 420px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #e26da5;
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-weight: 500;
+      color: #555;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      outline: none;
+      font-size: 15px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, select:focus {
+      border-color: #e26da5;
+    }
+
+    button {
+      background: #e26da5;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #d45a97;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>💅 Agende seu horário</h2>
+
+    <label for="nome">Seu nome</label>
+    <input type="text" id="nome" placeholder="Ex: Ana Souza" required>
+
+    <label for="data">Escolha a data (DD/MM/AAAA)</label>
+    <input type="text" id="data" placeholder="Ex: 12/11/2025" maxlength="10" required>
+
+    <label for="hora">Escolha o horário</label>
+    <input type="time" id="hora" required>
+
+    <label for="procedimento">Procedimento</label>
+    <select id="procedimento">
+      <option value="Colocação Molde F1 - R$70">Colocação Molde F1</option>
+      <option value="Manutenção - R$50">Manutenção</option>
+      <option value="Esmaltação em Gel - R$50">Esmaltação em Gel</option>
+    </select>
+
+    <button onclick="enviarWhatsApp()">Agendar</button>
+
+    <footer>✨ Eloa Nails - Cuidando de você com amor ✨</footer>
+  </div>
+
+  <script>
+    function validarNome(nome) {
+      const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
+      return regex.test(nome);
+    }
+
+    function validarData(data) {
+      const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+      if (!regex.test(data)) return false;
+
+      const partes = data.split("/");
+      const dia = parseInt(partes[0], 10);
+      const mes = parseInt(partes[1], 10) - 1;
+      const ano = parseInt(partes[2], 10);
+      const dataSelecionada = new Date(ano, mes, dia);
+      const hoje = new Date();
+
+      // Zerar hora de hoje
+      hoje.setHours(0,0,0,0);
+
+      return dataSelecionada >= hoje;
+    }
+
+    function validarHora(hora) {
+      if (!hora) return false;
+      const [h, m] = hora.split(":").map(Number);
+      const total = h * 60 + m;
+
+      const inicioManha = 8 * 60;
+      const fimManha = 10 * 60 + 30;
+      const inicioNoite = 18 * 60 + 30;
+      const fimNoite = 22 * 60;
+
+      return (total >= inicioManha && total <= fimManha) || (total >= inicioNoite && total <= fimNoite);
+    }
+
+    function enviarWhatsApp() {
+      const nome = document.getElementById("nome").value.trim();
+      const data = document.getElementById("data").value.trim();
+      const hora = document.getElementById("hora").value;
+      const procedimento = document.getElementById("procedimento").value;
+
+      if (!validarNome(nome)) {
+        alert("O nome deve conter apenas letras e espaços.");
+        return;
+      }
+
+      if (!validarData(data)) {
+        alert("Digite uma data válida (DD/MM/AAAA) e que não seja anterior ao dia de hoje.");
+        return;
+      }
+
+      if (!validarHora(hora)) {
+        alert("Escolha um horário entre 08:00 e 10:30 ou entre 18:30 e 22:00.");
+        return;
+      }
+
+      const mensagem = `*Novo Agendamento*%0A
+Cliente: ${nome}%0A
+Procedimento: ${procedimento}%0A
+Data: ${data}%0A
+Horário: ${hora}%0A
+Esta disponivel na agenda?`;
+
+      const telefone = "554791738493";
+      const url = `https://wa.me/${telefone}?text=${mensagem}`;
+      window.open(url, "_blank");
+    }
+
+    // Formatar automaticamente a data enquanto digita
+    document.getElementById("data").addEventListener("input", (e) => {
+      let valor = e.target.value.replace(/\D/g, "");
+      if (valor.length > 2 && valor.length <= 4)
+        valor = valor.replace(/(\d{2})(\d+)/, "$1/$2");
+      else if (valor.length > 4)
+        valor = valor.replace(/(\d{2})(\d{2})(\d+)/, "$1/$2/$3");
+      e.target.value = valor;
+    });
+  </script>
+</body>
+</html>
