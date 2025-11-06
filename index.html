@@ -101,8 +101,8 @@
     <label for="nome">Seu nome</label>
     <input type="text" id="nome" placeholder="Ex: Ana Souza" required>
 
-    <label for="data">Escolha a data (DD/MM/AAAA)</label>
-    <input type="text" id="data" placeholder="Ex: 12/11/2025" maxlength="10" required>
+    <label for="data">Escolha a data</label>
+    <input type="date" id="data" required>
 
     <label for="hora">Escolha o horário</label>
     <input type="time" id="hora" required>
@@ -127,39 +127,36 @@
   </div>
 
   <script>
+    // Impedir seleção de datas passadas
+    const dataInput = document.getElementById("data");
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    dataInput.min = `${ano}-${mes}-${dia}`;
+
+    // Bloquear domingos no calendário
+    dataInput.addEventListener("input", () => {
+      const valor = dataInput.value;
+      if (!valor) return;
+
+      const dataSelecionada = new Date(valor + "T00:00");
+      if (dataSelecionada.getDay() === 0) {
+        alert("Domingo não é possível agendar! 💅");
+        dataInput.value = "";
+      }
+    });
+
     function validarNome(nome) {
       const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
       return regex.test(nome);
     }
 
-    function validarData(data) {
-      const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-      if (!regex.test(data)) return false;
+    function validarHora(hora, dataValor) {
+      if (!hora || !dataValor) return false;
 
-      const partes = data.split("/");
-      const dia = parseInt(partes[0], 10);
-      const mes = parseInt(partes[1], 10) - 1;
-      const ano = parseInt(partes[2], 10);
-      const dataSelecionada = new Date(ano, mes, dia);
-      const hoje = new Date();
-
-      hoje.setHours(0,0,0,0);
-      dataSelecionada.setHours(0,0,0,0);
-
-      // Não permitir data anterior ou domingo
-      return dataSelecionada >= hoje && dataSelecionada.getDay() !== 0;
-    }
-
-    function validarHora(hora, data) {
-      if (!hora || !data) return false;
-
-      const partes = data.split("/");
-      const dia = parseInt(partes[0], 10);
-      const mes = parseInt(partes[1], 10) - 1;
-      const ano = parseInt(partes[2], 10);
-      const dataSelecionada = new Date(ano, mes, dia);
+      const dataSelecionada = new Date(dataValor + "T00:00");
       const diaSemana = dataSelecionada.getDay();
-
       const [h, m] = hora.split(":").map(Number);
       const total = h * 60 + m;
 
@@ -181,9 +178,14 @@
       return false;
     }
 
+    function formatarDataBR(dataValor) {
+      const partes = dataValor.split("-");
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
     function enviarWhatsApp() {
       const nome = document.getElementById("nome").value.trim();
-      const data = document.getElementById("data").value.trim();
+      const dataValor = document.getElementById("data").value;
       const hora = document.getElementById("hora").value;
       const procedimento = document.getElementById("procedimento").value;
 
@@ -192,20 +194,27 @@
         return;
       }
 
-      if (!validarData(data)) {
-        alert("Digite uma data válida (DD/MM/AAAA), que não seja domingo nem anterior a hoje.");
+      if (!dataValor) {
+        alert("Escolha uma data válida.");
         return;
       }
 
-      if (!validarHora(hora, data)) {
+      const dataSelecionada = new Date(dataValor + "T00:00");
+      if (dataSelecionada.getDay() === 0) {
+        alert("Domingo não é possível agendar.");
+        return;
+      }
+
+      if (!validarHora(hora, dataValor)) {
         alert("Horário fora do funcionamento! Segunda a sexta: 08:00–10:30 | Sábado: 08:00–12:00.");
         return;
       }
 
+      const dataBR = formatarDataBR(dataValor);
       const mensagem = `*Novo Agendamento*%0A
 Nome: ${nome}%0A
 Procedimento: ${procedimento}%0A
-Data: ${data}%0A
+Data: ${dataBR}%0A
 Horário: ${hora}%0A
 *Será possível agendar nessa data?*`;
 
@@ -213,16 +222,6 @@ Horário: ${hora}%0A
       const url = `https://wa.me/${telefone}?text=${mensagem}`;
       window.open(url, "_blank");
     }
-
-    // Formatar data automaticamente (DD/MM/AAAA)
-    document.getElementById("data").addEventListener("input", (e) => {
-      let valor = e.target.value.replace(/\D/g, "");
-      if (valor.length > 2 && valor.length <= 4)
-        valor = valor.replace(/(\d{2})(\d+)/, "$1/$2");
-      else if (valor.length > 4)
-        valor = valor.replace(/(\d{2})(\d{2})(\d+)/, "$1/$2/$3");
-      e.target.value = valor;
-    });
   </script>
 </body>
 </html>
