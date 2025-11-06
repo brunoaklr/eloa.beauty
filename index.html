@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agendamento | Eloa Nails</title>
+  <title>Agendamento | Eloa Beauty</title>
   <style>
     * {
       margin: 0;
@@ -18,6 +18,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 20px;
     }
 
     .container {
@@ -25,7 +26,7 @@
       padding: 30px;
       border-radius: 15px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      width: 95%;
+      width: 100%;
       max-width: 420px;
     }
 
@@ -75,9 +76,21 @@
 
     footer {
       text-align: center;
-      margin-top: 15px;
+      margin-top: 20px;
       font-size: 13px;
       color: #888;
+    }
+
+    .horario-funcionamento {
+      background: #ffe3ee;
+      border: 1px solid #f7b5ce;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+      color: #c04b80;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -96,14 +109,21 @@
 
     <label for="procedimento">Procedimento</label>
     <select id="procedimento">
-      <option value="Colocação Molde F1 - R$70">Colocação Molde F1</option>
-      <option value="Manutenção - R$50">Manutenção</option>
-      <option value="Esmaltação em Gel - R$50">Esmaltação em Gel</option>
+      <option value="Colocação Molde F1 - R$70">Colocação Molde F1 - R$70</option>
+      <option value="Manutenção - R$50">Manutenção - R$50</option>
+      <option value="Esmaltação em Gel - R$50">Esmaltação em Gel - R$50</option>
     </select>
 
     <button onclick="enviarWhatsApp()">Agendar</button>
 
-    <footer>✨ Eloa Nails - Cuidando de você com amor ✨</footer>
+    <div class="horario-funcionamento">
+      🕒 <b>Horário de funcionamento</b><br>
+      Segunda a Sexta: 08:00 - 10:30<br>
+      Sábado: 08:00 - 12:00<br>
+      Domingo: Fechado 💖
+    </div>
+
+    <footer>✨ Eloa Beauty - Cuidando de você com amor ✨</footer>
   </div>
 
   <script>
@@ -123,23 +143,42 @@
       const dataSelecionada = new Date(ano, mes, dia);
       const hoje = new Date();
 
-      // Zerar hora de hoje
       hoje.setHours(0,0,0,0);
+      dataSelecionada.setHours(0,0,0,0);
 
-      return dataSelecionada >= hoje;
+      // Não permitir data anterior ou domingo
+      return dataSelecionada >= hoje && dataSelecionada.getDay() !== 0;
     }
 
-    function validarHora(hora) {
-      if (!hora) return false;
+    function validarHora(hora, data) {
+      if (!hora || !data) return false;
+
+      const partes = data.split("/");
+      const dia = parseInt(partes[0], 10);
+      const mes = parseInt(partes[1], 10) - 1;
+      const ano = parseInt(partes[2], 10);
+      const dataSelecionada = new Date(ano, mes, dia);
+      const diaSemana = dataSelecionada.getDay();
+
       const [h, m] = hora.split(":").map(Number);
       const total = h * 60 + m;
 
-      const inicioManha = 8 * 60;
-      const fimManha = 10 * 60 + 30;
-      const inicioNoite = 18 * 60 + 30;
-      const fimNoite = 22 * 60;
+      // Segunda a sexta
+      if (diaSemana >= 1 && diaSemana <= 5) {
+        const inicio = 8 * 60;
+        const fim = 10 * 60 + 30;
+        return total >= inicio && total <= fim;
+      }
 
-      return (total >= inicioManha && total <= fimManha) || (total >= inicioNoite && total <= fimNoite);
+      // Sábado
+      if (diaSemana === 6) {
+        const inicio = 8 * 60;
+        const fim = 12 * 60;
+        return total >= inicio && total <= fim;
+      }
+
+      // Domingo - fechado
+      return false;
     }
 
     function enviarWhatsApp() {
@@ -154,28 +193,28 @@
       }
 
       if (!validarData(data)) {
-        alert("Digite uma data válida (DD/MM/AAAA) e que não seja anterior ao dia de hoje.");
+        alert("Digite uma data válida (DD/MM/AAAA), que não seja domingo nem anterior a hoje.");
         return;
       }
 
-      if (!validarHora(hora)) {
-        alert("Escolha um horário entre 08:00 e 10:30 ou entre 18:30 e 22:00.");
+      if (!validarHora(hora, data)) {
+        alert("Horário fora do funcionamento! Segunda a sexta: 08:00–10:30 | Sábado: 08:00–12:00.");
         return;
       }
 
       const mensagem = `*Novo Agendamento*%0A
-Cliente: ${nome}%0A
+Nome: ${nome}%0A
 Procedimento: ${procedimento}%0A
 Data: ${data}%0A
 Horário: ${hora}%0A
-Esta disponivel na agenda?`;
+*Será possível agendar nessa data?*`;
 
       const telefone = "554791738493";
       const url = `https://wa.me/${telefone}?text=${mensagem}`;
       window.open(url, "_blank");
     }
 
-    // Formatar automaticamente a data enquanto digita
+    // Formatar data automaticamente (DD/MM/AAAA)
     document.getElementById("data").addEventListener("input", (e) => {
       let valor = e.target.value.replace(/\D/g, "");
       if (valor.length > 2 && valor.length <= 4)
